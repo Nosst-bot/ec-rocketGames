@@ -140,7 +140,7 @@ export default function UserPanel() {
         if (!confirm('¿Está seguro de que desea eliminar este usuario?')) return;
 
         fetch(`http://localhost:8080/api/users/${id}`, {
-            method: 'POST',
+            method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`
             }

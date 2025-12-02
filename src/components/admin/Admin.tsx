@@ -12,10 +12,12 @@ export default function Admin() {
         nombre: "",
         precio: "",
         stock: "",
-        imagen: ""
+        imagen: "",
+        description: ""
     });
     const [editingId, setEditingId] = useState<number | null>(null);
     const role = localStorage.getItem("role");
+    const token = localStorage.getItem("token");
 
     const fetchGames = () => {
         fetch('http://localhost:8080/api/games')
@@ -36,13 +38,13 @@ export default function Admin() {
         setTimeout(() => setMessage(""), 3000);
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const resetForm = () => {
-        setFormData({ nombre: "", precio: "", stock: "", imagen: "" });
+        setFormData({ nombre: "", precio: "", stock: "", imagen: "", description: "" });
     };
 
     const openAddModal = () => {
@@ -60,7 +62,8 @@ export default function Admin() {
             nombre: game.title,
             precio: String(game.price),
             stock: String(game.stock),
-            imagen: game.imageUrl || ""
+            imagen: game.imageUrl || "",
+            description: game.description || ''
         });
         setEditingId(game.id);
         setShowEditModal(true);
@@ -75,7 +78,7 @@ export default function Admin() {
     const handleDeleteGame = (id: number) => {
         if (!confirm('¿Está seguro de que desea eliminar este producto?')) return;
 
-        fetch(`http://localhost:8080/api/games/${id}`, { method: 'DELETE' })
+        fetch(`http://localhost:8080/api/games/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } })
             .then(() => {
                 showMessage('Producto eliminado exitosamente');
                 fetchGames();
@@ -93,8 +96,8 @@ export default function Admin() {
             title: formData.nombre,
             price: Number(formData.precio),
             stock: Number(formData.stock),
-            imageUrl: formData.imagen,
-            description: ''
+            imageUrl: "assets/coverDefault.jpg",
+            description: formData.description
         };
 
         fetch('http://localhost:8080/api/games', {
@@ -125,12 +128,13 @@ export default function Admin() {
             title: formData.nombre,
             price: Number(formData.precio),
             stock: Number(formData.stock),
-            imageUrl: formData.imagen
+            imageUrl: formData.imagen,
+            description: formData.description
         };
 
         fetch(`http://localhost:8080/api/games/${editingId}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify(payload)
         })
             .then(res => {
@@ -170,7 +174,7 @@ export default function Admin() {
                         <thead>
                             <tr>
                                 <th scope="col">Imagen</th>
-                                <th scope="col">Nombre</th>
+                                <th scope="col">Nombre y descripción</th>
                                 <th scope="col">Precio</th>
                                 <th scope="col">Stock</th>
                                 <th scope="col">Acciones</th>
@@ -191,7 +195,7 @@ export default function Admin() {
                                             }}
                                         />
                                     </td>
-                                    <td>{game.title}</td>
+                                    <td>{game.title}<br /><span className="fw-light small text-muted d-block" style={{maxWidth: "300px"}}>{game.description}</span></td>
                                     <td>${game.price.toLocaleString('es-CL')}</td>
                                     <td>{game.stock}</td>
                                     <td>
@@ -268,14 +272,13 @@ export default function Admin() {
                                         />
                                     </div>
                                     <div className="mb-3">
-                                        <label htmlFor="addImagen" className="form-label">Ruta de imagen</label>
-                                        <input
-                                            type="text"
+                                        <label htmlFor="editDescription" className="form-label">Descripción</label>
+                                        <textarea
                                             className="form-control"
-                                            id="addImagen"
-                                            name="imagen"
-                                            placeholder="assets/nombreimagen.ext"
-                                            value={formData.imagen}
+                                            style={{ resize: "none" }}
+                                            id="editDescription"
+                                            name="description"
+                                            value={formData.description}
                                             onChange={handleInputChange}
                                             required
                                         />
@@ -355,6 +358,18 @@ export default function Admin() {
                                             id="editImagen"
                                             name="imagen"
                                             value={formData.imagen}
+                                            onChange={handleInputChange}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="mb-3">
+                                        <label htmlFor="editDescription" className="form-label">Descripción</label>
+                                        <textarea
+                                            className="form-control"
+                                            style={{ resize: "none" }}
+                                            id="editDescription"
+                                            name="description"
+                                            value={formData.description}
                                             onChange={handleInputChange}
                                             required
                                         />

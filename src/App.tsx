@@ -11,6 +11,8 @@ import Forbidden from './components/common/Forbidden'
 import Profile from './components/user/Profile'
 import NotFound from './components/common/NotFound'
 import Cart from './components/home/Cart'
+import Contact from './components/common/Contact'
+import AboutUs from './components/common/AboutUs'
 
 function App() {
   return (
@@ -22,6 +24,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path='/cart' element={<Cart />} />
+          <Route path='/contact' element={<Contact />} />
+          <Route path='/about' element={<AboutUs />} />
           <Route path="*" element={<NotFound />} />
         </Route>
         <Route path='/admin' element={<AdminRoute><Admin /></AdminRoute>} />

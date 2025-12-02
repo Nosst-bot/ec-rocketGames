@@ -68,10 +68,10 @@ export default function Navbar() {
                                 </ul>
                             </li>
                             <li className="nav-item">
-                                <a className="nav-link nav-modern" href="contacto.html">Contacto</a>
+                                <Link className="nav-link nav-modern" to="/contact">Contacto</Link>
                             </li>
                             <li className="nav-item">
-                                <a className="nav-link nav-modern" href="sobrenosotros.html">Sobre nosotros</a>
+                                <Link className="nav-link nav-modern" to="/about">Sobre nosotros</Link>
                             </li>
                         </ul>
 

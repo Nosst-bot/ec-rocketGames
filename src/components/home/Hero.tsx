@@ -43,7 +43,7 @@ export default function Hero() {
                             </h1>
                             <p className="text-end text-white fs-2">Con los mejores precios en Chile !</p>
                             <p className="text-end pt-3" style={{ marginRight: "170px" }}><svg xmlns="http://www.w3.org/2000/svg"
-                                id="heroLogo" width="120" height="120" fill="currentColor" className="bi bi-joystick"
+                                id="heroLogo" width="120" height="120" fill="yellow" className="bi bi-joystick"
                                 viewBox="0 0 16 16">
                                 <path
                                     d="M10 2a2 2 0 0 1-1.5 1.937v5.087c.863.083 1.5.377 1.5.726 0 .414-.895.75-2 .75s-2-.336-2-.75c0-.35.637-.643 1.5-.726V3.937A2 2 0 1 1 10 2" />

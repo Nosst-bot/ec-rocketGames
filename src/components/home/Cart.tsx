@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useCart } from '../context/CartContext';
 
 export default function Cart() {
@@ -12,6 +12,10 @@ export default function Cart() {
         setPaid(true);
         setTimeout(() => setPaid(false), 3000);
     }
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
     return (
         <section className="container-fluid">
@@ -29,7 +33,7 @@ export default function Cart() {
                                 <div key={item.id} className="card mb-3 shadow-sm border-0">
                                     <div className="row g-0 align-items-center py-2">
                                         <div className="col-3 col-md-2 text-center">
-                                            <img src={item.imagen} className="img-fluid" style={{width: "100px", height: "150px", objectFit: "cover", borderRadius: "8px"}} alt={item.nombre} />
+                                            <img src={item.imagen} className="img-fluid" style={{ width: "100px", height: "150px", objectFit: "cover", borderRadius: "8px" }} alt={item.nombre} />
                                         </div>
                                         <div className="col-6 col-md-7">
                                             <div className="card-body py-2">
