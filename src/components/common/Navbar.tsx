@@ -1,9 +1,12 @@
 import { useContext } from "react";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 
 export default function Navbar() {
     const { isLogged, role } = useContext(AuthContext);
+    const { getCartCount } = useCart();
+    const cartCount = getCartCount();
 
 
     return (
@@ -74,7 +77,7 @@ export default function Navbar() {
 
                         <ul className="navbar-nav d-flex flex-row gap-3">
                             <li className="nav-item">
-                                <a className="nav-link position-relative p-3 rounded-circle" href="#">
+                                <Link className="nav-link position-relative p-3 rounded-circle" to="/cart">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor"
                                         className="bi bi-cart-fill" viewBox="0 0 16 16">
                                         <path
@@ -82,8 +85,8 @@ export default function Navbar() {
                                     </svg>
                                     <span
                                         className="text-black fw-bold position-absolute fs-6 bottom-50 rounded-circle badge bg-body-tertiary"
-                                        id="cartCounter">0</span>
-                                </a>
+                                        id="cartCounter">{cartCount}</span>
+                                </Link>
                             </li>
                             <li className="nav-item">
                                 {isLogged ? (
@@ -103,7 +106,7 @@ export default function Navbar() {
                                 )}
                             </li>
 
-                            {isLogged && role === "ROLE_ADMIN" && (
+                            {isLogged && (role === "ROLE_ADMIN" || role === "ROLE_SELLER") && (
                                 <li className="nav-item">
                                     <Link className="nav-link p-3 position-relative rounded-circle" to="/admin">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor"

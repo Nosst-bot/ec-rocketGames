@@ -1,34 +1,38 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import Navbar from "../common/Navbar";
-import type { Game } from "../../client/types";
+import type { User } from "../../client/types";
 
-export default function Admin() {
-    const [games, setGames] = useState<Game[]>([]);
+export default function UserPanel() {
+    const [users, setUsers] = useState<User[]>([]);
     const [message, setMessage] = useState<string>("");
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [formData, setFormData] = useState({
-        nombre: "",
-        precio: "",
-        stock: "",
-        imagen: ""
+        username: "",
+        email: "",
+        password: "",
+        role: "ROLE_USER"
     });
     const [editingId, setEditingId] = useState<number | null>(null);
-    const role = localStorage.getItem("role");
 
-    const fetchGames = () => {
-        fetch('http://localhost:8080/api/games')
+    const token = localStorage.getItem("token") || "";
+
+    const fetchUsers = () => {
+        fetch('http://localhost:8080/api/users', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
             .then(response => response.json())
-            .then(data => setGames(data))
+            .then(data => setUsers(data))
             .catch(err => {
-                console.error('Error fetching games:', err);
-                setMessage('Error al cargar los juegos');
+                console.error('Error fetching users:', err);
+                showMessage('Error al cargar los usuarios');
             });
     };
 
     useEffect(() => {
-        fetchGames();
+        fetchUsers();
     }, []);
 
     const showMessage = (msg: string) => {
@@ -36,13 +40,13 @@ export default function Admin() {
         setTimeout(() => setMessage(""), 3000);
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const resetForm = () => {
-        setFormData({ nombre: "", precio: "", stock: "", imagen: "" });
+        setFormData({ username: "", email: "", password: "", role: "ROLE_USER" });
     };
 
     const openAddModal = () => {
@@ -55,14 +59,14 @@ export default function Admin() {
         resetForm();
     };
 
-    const openEditModal = (game: Game) => {
+    const openEditModal = (user: User) => {
         setFormData({
-            nombre: game.title,
-            precio: String(game.price),
-            stock: String(game.stock),
-            imagen: game.imageUrl || ""
+            username: user.username,
+            email: user.email,
+            password: "",
+            role: user.role
         });
-        setEditingId(game.id);
+        setEditingId(user.id);
         setShowEditModal(true);
     };
 
@@ -72,34 +76,19 @@ export default function Admin() {
         resetForm();
     };
 
-    const handleDeleteGame = (id: number) => {
-        if (!confirm('¿Está seguro de que desea eliminar este producto?')) return;
-
-        fetch(`http://localhost:8080/api/games/${id}`, { method: 'DELETE' })
-            .then(() => {
-                showMessage('Producto eliminado exitosamente');
-                fetchGames();
-            })
-            .catch(err => {
-                console.error('Error deleting product:', err);
-                showMessage('Error al eliminar el producto');
-            });
-    };
-
-    const handleAddProduct = (e: React.FormEvent) => {
+    const handleAddUser = (e: React.FormEvent) => {
         e.preventDefault();
 
         const payload = {
-            title: formData.nombre,
-            price: Number(formData.precio),
-            stock: Number(formData.stock),
-            imageUrl: formData.imagen,
-            description: ''
+            username: formData.username,
+            email: formData.email,
+            password: formData.password,
+            role: formData.role
         };
 
-        fetch('http://localhost:8080/api/games', {
+        fetch('http://localhost:8080/api/users/create', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify(payload)
         })
             .then(res => {
@@ -107,30 +96,29 @@ export default function Admin() {
                 return res.json();
             })
             .then(() => {
-                showMessage('Producto agregado exitosamente');
+                showMessage('Usuario agregado exitosamente');
                 closeAddModal();
-                fetchGames();
+                fetchUsers();
             })
             .catch(err => {
-                console.error('Error adding product:', err);
-                showMessage('Error al agregar el producto');
+                console.error('Error adding user:', err);
+                showMessage('Error al agregar el usuario');
             });
     };
 
-    const handleEditProduct = (e: React.FormEvent) => {
+    const handleEditUser = (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingId) return;
 
         const payload = {
-            title: formData.nombre,
-            price: Number(formData.precio),
-            stock: Number(formData.stock),
-            imageUrl: formData.imagen
+            username: formData.username,
+            email: formData.email,
+            role: formData.role
         };
 
-        fetch(`http://localhost:8080/api/games/${editingId}`, {
+        fetch(`http://localhost:8080/api/users/${editingId}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify(payload)
         })
             .then(res => {
@@ -138,13 +126,40 @@ export default function Admin() {
                 return res.json();
             })
             .then(() => {
-                showMessage('Producto actualizado exitosamente');
+                showMessage('Usuario actualizado exitosamente');
                 closeEditModal();
-                fetchGames();
+                fetchUsers();
             })
             .catch(err => {
-                console.error('Error updating product:', err);
-                showMessage('Error al actualizar el producto');
+                console.error('Error updating user:', err);
+                showMessage('Error al actualizar el usuario');
+            });
+    };
+
+    const handleDeleteUser = (id: number) => {
+        if (!confirm('¿Está seguro de que desea eliminar este usuario?')) return;
+
+        fetch(`http://localhost:8080/api/users/${id}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error || 'Error al eliminar');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                showMessage(data.message || 'Usuario eliminado exitosamente');
+                fetchUsers();
+            })
+            .catch(err => {
+                console.error('Error deleting user:', err);
+                showMessage(err.message || 'Error al eliminar el usuario');
             });
     };
 
@@ -154,61 +169,42 @@ export default function Admin() {
             <section className="container-fluid pt-4">
                 <div className="container-lg">
                     <div className="d-flex justify-content-between align-items-center mb-4">
-                        <h1>Panel de administrador</h1>
-                        <div className="d-flex gap-2">
-                            {role === "ROLE_ADMIN" && (
-                                <Link to="/admin/users" className="btn btn-info">Gestionar Usuarios</Link>
-                            )}
-                            <button className="btn btn-primary" onClick={openAddModal}>
-                                Agregar producto
-                            </button>
-                        </div>
+                        <h1>Panel de Usuarios</h1>
+                        <button className="btn btn-primary" onClick={openAddModal}>
+                            Agregar Usuario
+                        </button>
                     </div>
-
                     {message && <div className="alert alert-info alert-dismissible fade show">{message}</div>}
-                    <table className="table table-hover">
+                    <table className="table table-hover" id="userTable">
                         <thead>
                             <tr>
-                                <th scope="col">Imagen</th>
-                                <th scope="col">Nombre</th>
-                                <th scope="col">Precio</th>
-                                <th scope="col">Stock</th>
+                                <th scope="col">ID</th>
+                                <th scope="col">Usuario</th>
+                                <th scope="col">Email</th>
+                                <th scope="col">Rol</th>
                                 <th scope="col">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {games.map((game) => (
-                                <tr key={game.id}>
-                                    <td>
-                                        <img
-                                            src={game.imageUrl}
-                                            alt={game.title}
-                                            style={{
-                                                width: "100px",
-                                                height: "150px",
-                                                objectFit: "cover",
-                                                borderRadius: "8px"
-                                            }}
-                                        />
-                                    </td>
-                                    <td>{game.title}</td>
-                                    <td>${game.price.toLocaleString('es-CL')}</td>
-                                    <td>{game.stock}</td>
+                            {users.map((user) => (
+                                <tr key={user.id}>
+                                    <td>{user.id}</td>
+                                    <td>{user.username}</td>
+                                    <td>{user.email}</td>
+                                    <td><span className={`badge ${user.role === 'ROLE_ADMIN' ? 'bg-danger' : 'bg-info'}`}>{user.role}</span></td>
                                     <td>
                                         <button
                                             className="btn btn-sm btn-primary me-2"
-                                            onClick={() => openEditModal(game)}
+                                            onClick={() => openEditModal(user)}
                                         >
                                             Editar
                                         </button>
-                                        {role === "ROLE_ADMIN" && (
-                                            <button
-                                                className="btn btn-sm btn-danger"
-                                                onClick={() => handleDeleteGame(game.id)}
-                                            >
-                                                Eliminar
-                                            </button>
-                                        )}
+                                        <button
+                                            className="btn btn-sm btn-danger"
+                                            onClick={() => handleDeleteUser(user.id)}
+                                        >
+                                            Eliminar
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
@@ -221,9 +217,9 @@ export default function Admin() {
                 <div className="modal show d-block" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }} role="dialog">
                     <div className="modal-dialog" role="document">
                         <div className="modal-content">
-                            <form onSubmit={handleAddProduct}>
+                            <form onSubmit={handleAddUser}>
                                 <div className="modal-header">
-                                    <h5 className="modal-title">Agregar producto</h5>
+                                    <h5 className="modal-title">Agregar Usuario</h5>
                                     <button
                                         type="button"
                                         className="btn-close"
@@ -232,53 +228,55 @@ export default function Admin() {
                                 </div>
                                 <div className="modal-body">
                                     <div className="mb-3">
-                                        <label htmlFor="addNombre" className="form-label">Nombre</label>
+                                        <label htmlFor="addUsername" className="form-label">Usuario</label>
                                         <input
                                             type="text"
                                             className="form-control"
-                                            id="addNombre"
-                                            name="nombre"
-                                            value={formData.nombre}
+                                            id="addUsername"
+                                            name="username"
+                                            value={formData.username}
                                             onChange={handleInputChange}
                                             required
                                         />
                                     </div>
                                     <div className="mb-3">
-                                        <label htmlFor="addPrecio" className="form-label">Precio</label>
+                                        <label htmlFor="addEmail" className="form-label">Email</label>
                                         <input
-                                            type="number"
+                                            type="email"
                                             className="form-control"
-                                            id="addPrecio"
-                                            name="precio"
-                                            value={formData.precio}
+                                            id="addEmail"
+                                            name="email"
+                                            value={formData.email}
                                             onChange={handleInputChange}
                                             required
                                         />
                                     </div>
                                     <div className="mb-3">
-                                        <label htmlFor="addStock" className="form-label">Stock</label>
+                                        <label htmlFor="addPassword" className="form-label">Contraseña</label>
                                         <input
-                                            type="number"
+                                            type="password"
                                             className="form-control"
-                                            id="addStock"
-                                            name="stock"
-                                            value={formData.stock}
+                                            id="addPassword"
+                                            name="password"
+                                            value={formData.password}
                                             onChange={handleInputChange}
                                             required
                                         />
                                     </div>
                                     <div className="mb-3">
-                                        <label htmlFor="addImagen" className="form-label">Ruta de imagen</label>
-                                        <input
-                                            type="text"
+                                        <label htmlFor="addRole" className="form-label">Rol</label>
+                                        <select
                                             className="form-control"
-                                            id="addImagen"
-                                            name="imagen"
-                                            placeholder="assets/nombreimagen.ext"
-                                            value={formData.imagen}
+                                            id="addRole"
+                                            name="role"
+                                            value={formData.role}
                                             onChange={handleInputChange}
                                             required
-                                        />
+                                        >
+                                            <option value="ROLE_USER">Usuario</option>
+                                            <option value="ROLE_SELLER">Vendedor</option>
+                                            <option value="ROLE_ADMIN">Admin</option>
+                                        </select>
                                     </div>
                                 </div>
                                 <div className="modal-footer">
@@ -301,9 +299,9 @@ export default function Admin() {
                 <div className="modal show d-block" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }} role="dialog">
                     <div className="modal-dialog" role="document">
                         <div className="modal-content">
-                            <form onSubmit={handleEditProduct}>
+                            <form onSubmit={handleEditUser}>
                                 <div className="modal-header">
-                                    <h5 className="modal-title">Editar producto</h5>
+                                    <h5 className="modal-title">Editar Usuario</h5>
                                     <button
                                         type="button"
                                         className="btn-close"
@@ -312,52 +310,43 @@ export default function Admin() {
                                 </div>
                                 <div className="modal-body">
                                     <div className="mb-3">
-                                        <label htmlFor="editNombre" className="form-label">Nombre</label>
+                                        <label htmlFor="editUsername" className="form-label">Usuario</label>
                                         <input
                                             type="text"
                                             className="form-control"
-                                            id="editNombre"
-                                            name="nombre"
-                                            value={formData.nombre}
+                                            id="editUsername"
+                                            name="username"
+                                            value={formData.username}
                                             onChange={handleInputChange}
                                             required
                                         />
                                     </div>
                                     <div className="mb-3">
-                                        <label htmlFor="editPrecio" className="form-label">Precio</label>
+                                        <label htmlFor="editEmail" className="form-label">Email</label>
                                         <input
-                                            type="number"
+                                            type="email"
                                             className="form-control"
-                                            id="editPrecio"
-                                            name="precio"
-                                            value={formData.precio}
+                                            id="editEmail"
+                                            name="email"
+                                            value={formData.email}
                                             onChange={handleInputChange}
                                             required
                                         />
                                     </div>
                                     <div className="mb-3">
-                                        <label htmlFor="editStock" className="form-label">Stock</label>
-                                        <input
-                                            type="number"
+                                        <label htmlFor="editRole" className="form-label">Rol</label>
+                                        <select
                                             className="form-control"
-                                            id="editStock"
-                                            name="stock"
-                                            value={formData.stock}
+                                            id="editRole"
+                                            name="role"
+                                            value={formData.role}
                                             onChange={handleInputChange}
                                             required
-                                        />
-                                    </div>
-                                    <div className="mb-3">
-                                        <label htmlFor="editImagen" className="form-label">Ruta de imagen</label>
-                                        <input
-                                            type="text"
-                                            className="form-control"
-                                            id="editImagen"
-                                            name="imagen"
-                                            value={formData.imagen}
-                                            onChange={handleInputChange}
-                                            required
-                                        />
+                                        >
+                                            <option value="ROLE_USER">Usuario</option>
+                                            <option value="ROLE_SELLER">Vendedor</option>
+                                            <option value="ROLE_ADMIN">Admin</option>
+                                        </select>
                                     </div>
                                 </div>
                                 <div className="modal-footer">

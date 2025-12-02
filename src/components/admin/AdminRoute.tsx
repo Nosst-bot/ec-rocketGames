@@ -1,9 +1,5 @@
-import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
-
-interface AdminRouteProps {
-    children: ReactNode;
-}
+import type { AdminRouteProps } from "../../client/types";
 
 export default function AdminRoute({ children }: AdminRouteProps) {
     const role = localStorage.getItem("role");

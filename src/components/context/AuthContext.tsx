@@ -1,22 +1,13 @@
-import { createContext, useState, type ReactNode } from "react";
+import { createContext, useState } from "react";
+import type { AuthContextType, AuthProviderProps } from "../../client/types";
 
-interface AuthContextType {
-    token: string | null;
-    role: string | null;
-    login: (jwt: string, r: string) => void;
-    logout: () => void;
-    isLogged: boolean;
-}
 
-interface AuthProviderProps {
-    children: ReactNode;
-}
 
 export const AuthContext = createContext<AuthContextType>({
     token: null,
     role: null,
-    login: () => {},
-    logout: () => {},
+    login: () => { },
+    logout: () => { },
     isLogged: false
 });
 
